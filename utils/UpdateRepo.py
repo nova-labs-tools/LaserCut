@@ -21,7 +21,7 @@ UpdateRepo.py
 
 """
 
-LocalDir = r'D:\coggs\git\GitNovaLabs'
+LocalDir = r'C:\Users\drogg\Desktop\GitNovaLabs'
 RepoName = 'LaserCut'
 GitSSH = 'git@github.com:nova-labs-tools'
 RepoOwner = 'nova-labs-tools'
@@ -36,6 +36,9 @@ import shlex
 import re
 from colorama import Fore, Back, Style
 from colorama import init as colorama_init
+from time import gmtime, strftime
+
+
 
 Red = Style.BRIGHT  + Fore.RED 
 Green = Style.BRIGHT  + Fore.GREEN
@@ -92,6 +95,7 @@ def AddToRepo():
   try:
     cmd = shlex.split('bash -c find .')
     findproc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
   except OSError as e:
     print Red + "ERROR %s: %s" % (cmd, e.strerror)
     Exit()
@@ -127,26 +131,29 @@ def sethpath():
 ##    
 # colorized output fix
 colorama_init(autoreset=True)
+timestr = strftime("%d-%b-%Y-%H%M", gmtime())
+
+oldsuf = '-precheck-in-' + timestr
 
 # go to dir , remove work copy, save off local copy of repo
 Chdir(LocalDir)
-DoCmd('rm -rf ' + RepoName + '-precheck-in',ignore_exit_code=1)
-DoCmd('cp -rp ' + RepoName + ' ' + RepoName + '-precheck-in')
-DoCmd('rm -rf ' + RepoName, ignore_exit_code=1)
+DoCmd('mv ' + RepoName + ' ' + RepoName + oldsuf)
 
 # get on git, check out current copy
 LogIntoGit()
 DoCmd('git clone git@github.com:/' + RepoOwner + '/' + RepoName + '.git')
-Chdir(RepoName + '-precheck-in')
+Chdir(RepoName + oldsuf)
 # overlay our copy on git's
 # couple of side-effects to note: This  copy always updates everything. Shouldn't be a problem unless someone checks in a bad copy.
 # OK because we can always recover an old version
 # Also, this will check in new directories and files, but it won't get rid of old ones. So there will need to be some
 # periodic hand-cleaning
-DoCmd('tar cf ../tmp.tar --exclude  .git .')
+DoCmd('tar cvf ../tmp.tar --exclude  .git .')
 Chdir('..')
 Chdir(RepoName)
 DoCmd('tar xf ../tmp.tar')
 AddToRepo()
 CheckIntoRepo()
+Chdir('..')
+DoCmd('rm  tmp.tar')
 Exit()
