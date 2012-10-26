@@ -4,3 +4,6 @@ HurricaneCharley/
 
 utils/
   utilities scripts for managing this repository
+
+Projects/
+  Complete projects anyone would like to contribute
